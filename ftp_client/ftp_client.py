@@ -1,8 +1,9 @@
 import aioftp
 import asyncio
+import os
 from ftp_client.uploader import Uploader
 MENU = """Select an option:
-    - upload <path/to/file>
+    - upload
     - list
     - quit
 """
@@ -11,7 +12,15 @@ async def user_options(client):
     option = input(MENU)
     option = option.strip()
     if option.lower() == 'upload':
-        upload_handler = Uploader(path_to_file="stufftemp.txt")
+        dir = None
+        file = None
+        fpath = input('Input file or directory to upload:')
+        if fpath:
+            if os.path.isdir(fpath):
+                dir = fpath
+            else:
+                file = fpath
+        upload_handler = Uploader(client, path_to_file=file, path_to_dir=dir)
         await upload_handler.perform_upload()
     if option.lower() == "list":
         await list_files(client)
