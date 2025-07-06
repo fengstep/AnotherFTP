@@ -1,5 +1,5 @@
 import argparse
-from .ftp_client import run_client 
+from .ftp_client import run_client
 
 class CommandLine:
     def __init__(self, args):
@@ -28,6 +28,7 @@ class CommandLine:
         if parsed_args.command == "login":
             print(f"Client running!")
             print(f"Attempting login as {parsed_args.username}...")
+
 
             # Call the run_client function, passing the provided credentials
             run_client(parsed_args.username, parsed_args.password)
