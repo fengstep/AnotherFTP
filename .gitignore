@@ -1,3 +1,7 @@
 ftp_client/__pycache__
 venv
 agile_virtual_environment/
+
+## Testing Files that may be present in FTP server directory ##
+huh_cat.gif
+stuff_folder/
