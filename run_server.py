@@ -1,12 +1,17 @@
 import aioftp
 import asyncio
+from dotenv import load_dotenv
+import os
 
 async def main():
     server = aioftp.Server()
-    print("aioftp Server initializing...")
+    load_dotenv("public.env")
+    print("Aioftp server initializing...")
     try:
-        print("Server started.")
-        await server.run(host="127.0.0.1", port=2121)
+        selectedPort = os.getenv('port')
+        ip = os.getenv('ip')
+        print(f"Server started at {ip}:{selectedPort}")
+        await server.run(host=ip, port=selectedPort)
 
     except Exception as e:
         print(f"ERROR: Server failed to start.\n{e}")

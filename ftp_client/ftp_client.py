@@ -1,7 +1,9 @@
 import aioftp
 import asyncio
 import os
+from dotenv import load_dotenv
 from ftp_client.uploader import Uploader
+
 MENU = """Select an option:
     - upload
     - list
@@ -40,18 +42,20 @@ async def list_files(client):
         else:
             files.append(path.name)
 
-    # List the files and directories in ROOT DIRECTORY on the remote server alphabetically
-    print("\nDirectories on server:")
+    # List the files and directories in /server_dir on the remote server alphabetically
+    if(len(directories) != 0):
+        print("\nDirectories on server:")
     for d in sorted(directories):
-        print(f"  {d}")
+        print(f"      {d}/")
 
-    print("\nFiles on server:")
+    if(len(files) != 0):
+        print("\nFiles on server:")
     for f in sorted(files):
-        print(f"  {f}")
+        print(f"      {f}")
+    print()
 
 
-
-async def connect_and_login(username, password, host="127.0.0.1", port=2121):
+async def connect_and_login(username, password, host, port):
     client = aioftp.Client()
     try:
         print(f"Connecting to FTP remote server at {host}:{port}")
@@ -73,4 +77,5 @@ async def connect_and_login(username, password, host="127.0.0.1", port=2121):
         print(f"Connection/login failed: {e}")
 
 def run_client(username, password):
-    asyncio.run(connect_and_login(username, password))
+    load_dotenv("public.env")
+    asyncio.run(connect_and_login(username, password, os.getenv("ip"), os.getenv("port")))
