@@ -7,6 +7,7 @@ from ftp_client.uploader import Uploader
 MENU = """Select an option:
     - upload
     - list
+    - local
     - quit
 """
 
@@ -24,8 +25,15 @@ async def user_options(client):
                 file = fpath
         upload_handler = Uploader(client, path_to_file=file, path_to_dir=dir)
         await upload_handler.perform_upload()
-    if option.lower() == "list":
+        
+    elif option.lower() == "list":
         await list_files(client)
+
+    elif option.lower() == "local":
+        path = input("Enter local directory path (or press Enter for current directory): ").strip()
+        if not path:
+            path = "."
+        list_local_directory(path)
     return option
 
 async def list_files(client):
@@ -75,6 +83,43 @@ async def connect_and_login(username, password, host, port):
 
     except Exception as e:
         print(f"Connection/login failed: {e}")
+
+
+def list_local_directory(path="."):
+    """List local directories and files using os module."""
+    try:
+        # Expand ~ and get absolute path
+        abs_path = os.path.abspath(os.path.expanduser(path))
+
+        if not os.path.exists(abs_path):
+            print(f"Path '{path}' does not exist.")
+            return
+
+        entries = os.listdir(abs_path)
+
+        directories = []
+        files = []
+
+        for entry in entries:
+            full_path = os.path.join(abs_path, entry)
+            if os.path.isdir(full_path):
+                directories.append(entry)
+            else:
+                files.append(entry)
+
+        if directories:
+            print("\nDirectories:")
+            for d in sorted(directories):
+                print(f"      {d}/")
+
+        if files:
+            print("\nFiles:")
+            for f in sorted(files):
+                print(f"      {f}")
+        print()
+
+    except Exception as e:
+        print(f"Error reading local directory: {e}")
 
 def run_client(username, password):
     load_dotenv("public.env")
