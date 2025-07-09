@@ -12,5 +12,5 @@ class Uploader():
                 await self.client.upload(self.path)
             else:
                 raise FileNotFound(self.path)
-        else: # Path doesn't exist
-            raise NoPathProvided()
+        # Path doesn't exist
+        raise NoPathProvided()
