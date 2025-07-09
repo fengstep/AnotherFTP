@@ -5,7 +5,7 @@ from .ftp_client import run_client
 from .ftp_client_exceptions import ClientFileNotFoundError, ClientNoFilePathError
 from .uploader import Uploader
 
-class TestUploader(unittest.TestCase):
+class TestUploader(unittest.IsolatedAsyncioTestCase):
 
     @unittest.skip("Needs online implementation")
     def test_perform_upload_file(self):
