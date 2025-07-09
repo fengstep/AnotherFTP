@@ -1,9 +1,8 @@
 import asyncio
 import unittest
 import os
-from .ftp_client import run_client
-from .ftp_client_exceptions import FileNotFound, NoPathProvided
-from .uploader import Uploader
+from ..ftp_client_exceptions import FileNotFound, NoPathProvided
+from ..uploader import Uploader
 
 class TestUploader(unittest.IsolatedAsyncioTestCase):
 
