@@ -1,23 +1,16 @@
 import aiofiles.os
-from .ftp_client_exceptions import ClientFileNotFoundError, ClientNoFilePathError
+from .ftp_client_exceptions import FileNotFound, NoPathProvided
 class Uploader():
-    def __init__(self, client, path_to_file=None, path_to_dir=None):
-        self.path_to_chosen_file = path_to_file
-        self.path_to_chosen_dir = path_to_dir
+    def __init__(self, client, path = None):
         self.client = client
+        self.path = path
     
     async def perform_upload(self):
-        if self.path_to_chosen_dir:
-            if await aiofiles.os.path.exists(self.path_to_chosen_dir):
-                print('Uploading directory {}'.format(self.path_to_chosen_dir))
-                await self.client.upload(self.path_to_chosen_dir)
+        if(self.path): # Path exists
+            if await aiofiles.os.path.exists(self.path):
+                print('Uploading {}'.format(self.path))
+                await self.client.upload(self.path)
             else:
-                raise ClientFileNotFoundError(self.path_to_chosen_dir)
-        elif self.path_to_chosen_file:
-            if await aiofiles.os.path.exists(self.path_to_chosen_file):    
-                print('Uploading file {}'.format(self.path_to_chosen_file))
-                await self.client.upload(self.path_to_chosen_file)
-            else:
-                raise ClientFileNotFoundError(self.path_to_chosen_file)
-        else:
-            raise ClientNoFilePathError()
+                raise FileNotFound(self.path)
+        # Path doesn't exist
+        raise NoPathProvided()

@@ -1,7 +1,7 @@
-class ClientFileNotFoundError(Exception):
+class FileNotFound(Exception):
     def __init__(self, path):
-        super().__init__("Unable to find '{}'. Try using the full system path to that file instead.".format(path))
+        super().__init__("Unable to find '{}'. Try using the full system path to that file/directory instead.".format(path))
 
-class ClientNoFilePathError(Exception):
+class NoPathProvided(Exception):
     def __init__(self):
         super().__init__("Nothing to upload - no fpath provided.")
