@@ -10,6 +10,7 @@ class Uploader():
             if await aiofiles.os.path.exists(self.path):
                 print('Uploading {}'.format(self.path))
                 await self.client.upload(self.path)
+                return
             else:
                 raise FileNotFound(self.path)
         # Path doesn't exist
