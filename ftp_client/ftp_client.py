@@ -1,10 +1,12 @@
 import aioftp
 import asyncio
 import os
+import traceback
 from dotenv import load_dotenv
 from ftp_client.uploader import Uploader
 
 MENU = """Select an option:
+    - download
     - upload
     - list
     - local
@@ -13,8 +15,8 @@ MENU = """Select an option:
 
 async def user_options(client):
     option = input(MENU)
-    option = option.strip()
-    if option.lower() == 'upload':
+    option = option.strip().lower()
+    if option == 'upload':
         fpath = input('Input file or directory to upload:')
         upload_handler = Uploader(client, fpath)
         try:
@@ -22,14 +24,21 @@ async def user_options(client):
         except Exception as e:
             print(f"Error with upload: {e}")
         
-    elif option.lower() == "list":
+    elif option == "list":
         await list_files(client)
 
-    elif option.lower() == "local":
+    elif option == "local":
         path = input("Enter local directory path (or press Enter for current directory): ").strip()
         if not path:
             path = "."
         list_local_directory(path)
+    
+    elif option == "download":
+        await list_files(client)
+        fpath = input("Enter file to download: ")
+        download = Uploader(client, fpath)
+        await download.perform_download()
+
     return option
 
 async def list_files(client):
@@ -80,6 +89,7 @@ async def connect_and_login(username, password, host, port):
 
     except Exception as e:
         print(f"Connection/login failed: {e}")
+        traceback.print_exc()
 
 
 def list_local_directory(path="."):
