@@ -38,11 +38,13 @@ async def user_options(client):
 
 async def list_files(client):
     # Lists for directory and file names in remote server
+    load_dotenv("public.env")
+    remote_dir = os.getenv("remote_dir")
     directories = []
     files = []
 
     # Go through and add all entries (directories & files)
-    async for path, info in client.list():
+    async for path, info in client.list(remote_dir):
         # If the type is a directory
         if info.get('type') == 'dir':
             directories.append(path.name)
@@ -87,8 +89,11 @@ async def connect_and_login(username, password, host, port):
 
 def list_local_directory(path="."):
     """List local directories and files using os module."""
+    load_dotenv("public.env")
+    if(path == "."): # Auto assign localpath
+        path = os.getenv("local_dir")
     try:
-        # Expand ~ and get absolute path
+        # Expand ~ and get absolute path if user specified
         abs_path = os.path.abspath(os.path.expanduser(path))
 
         if not os.path.exists(abs_path):
@@ -123,4 +128,6 @@ def list_local_directory(path="."):
 
 def run_client(username, password):
     load_dotenv("public.env")
-    asyncio.run(connect_and_login(username, password, os.getenv("ip"), os.getenv("port")))
+    asyncio.run(connect_and_login(username, password,
+                                  os.getenv("ip"),
+                                  os.getenv("port")))
