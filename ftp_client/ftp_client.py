@@ -3,9 +3,11 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from ftp_client.uploader import Uploader
+from ftp_client.remover import Remover
 
 MENU = """Select an option:
     - upload
+    - remove
     - list
     - local
     - quit
@@ -25,10 +27,14 @@ async def user_options(client):
                 file = fpath
         upload_handler = Uploader(client, path_to_file=file, path_to_dir=dir)
         await upload_handler.perform_upload()
-        
+    elif option.lower() == "remove":
+        file = None
+        await list_files(client)
+        fpath = input("Input File/Directory to remove:")
+        remover = Remover(client)
+        await remover.remove_file(fpath)
     elif option.lower() == "list":
         await list_files(client)
-
     elif option.lower() == "local":
         path = input("Enter local directory path (or press Enter for current directory): ").strip()
         if not path:
