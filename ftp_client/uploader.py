@@ -9,7 +9,7 @@ class Uploader():
         self.path = path
     
     async def perform_upload(self):
-        if(self.path): # Path exists
+        if self.path: # Path exists
             if await aiofiles.os.path.exists(self.path):
                 print('Uploading {}'.format(self.path))
                 await self.client.upload(self.path)
@@ -17,7 +17,8 @@ class Uploader():
             else:
                 raise ClientFileNotFoundError(self.path)
         # Path doesn't exist
-        raise ClientNoPathProvidedError()
+        else:
+          raise ClientNoPathProvidedError()
     
     async def perform_download(self):
         load_dotenv("public.env")
@@ -28,4 +29,6 @@ class Uploader():
                 return 1
             else:
                 raise ClientFileNotFoundError(self.path)
-        raise ClientNoPathProvidedError()
+        else:
+            raise ClientNoPathProvidedError()
+
