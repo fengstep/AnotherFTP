@@ -1,7 +1,7 @@
 import asyncio
 import unittest
 import os
-from ..ftp_client_exceptions import FileNotFound, NoPathProvided
+from ..ftp_client_exceptions import ClientFileNotFoundError, ClientNoPathProvidedError
 from ..uploader import Uploader
 
 class TestUploader(unittest.IsolatedAsyncioTestCase):
@@ -20,17 +20,17 @@ class TestUploader(unittest.IsolatedAsyncioTestCase):
 
     async def test_perform_upload_no_file_path(self):
         uploader = Uploader(None)
-        with self.assertRaises(NoPathProvided):
+        with self.assertRaises(ClientNoPathProvidedError):
             await uploader.perform_upload()
         
     async def test_perform_upload_no_file_found(self):
         fpath = "ewrgvwretgherhwer.txt"
         file_uploader = Uploader(None, path=fpath)
-        with self.assertRaises(FileNotFound):
+        with self.assertRaises(ClientFileNotFoundError):
             await file_uploader.perform_upload()
     
     async def test_perform_upload_no_dir_found(self):
         fpath = "complete/nonsense/fpath/with/no/end"
         dir_uploader = Uploader(None, path=fpath)
-        with self.assertRaises(FileNotFound):
+        with self.assertRaises(ClientFileNotFoundError):
             await dir_uploader.perform_upload()
