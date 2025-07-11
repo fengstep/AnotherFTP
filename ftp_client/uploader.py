@@ -1,7 +1,10 @@
 import aiofiles.os
 from .ftp_client_exceptions import ClientFileNotFoundError, ClientNoPathProvidedError
+import os
+import aioftp
+from dotenv import load_dotenv
 class Uploader():
-    def __init__(self, client, path = None):
+    def __init__(self, client: aioftp.Client, path = None):
         self.client = client
         self.path = path
     
@@ -10,8 +13,22 @@ class Uploader():
             if await aiofiles.os.path.exists(self.path):
                 print('Uploading {}'.format(self.path))
                 await self.client.upload(self.path)
+                return 1
             else:
                 raise ClientFileNotFoundError(self.path)
         # Path doesn't exist
         else:
+          raise ClientNoPathProvidedError()
+    
+    async def perform_download(self):
+        load_dotenv("public.env")
+        if(self.path):
+            if await self.client.exists(self.path):
+                print('Downloading {}'.format(self.path))
+                await self.client.download(self.path, os.getenv("local_dir"))
+                return 1
+            else:
+                raise ClientFileNotFoundError(self.path)
+        else:
             raise ClientNoPathProvidedError()
+

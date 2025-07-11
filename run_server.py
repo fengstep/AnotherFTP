@@ -4,7 +4,18 @@ from dotenv import load_dotenv
 import os
 
 async def main():
-    server = aioftp.Server()
+    users = (
+        aioftp.User(
+            "user",
+            "password",
+            home_path="/remote",
+            permissions = (
+                aioftp.Permission("/", readable=False, writable=False),
+                aioftp.Permission("/remote", readable=True, writable=True),
+            )
+        ),
+    )
+    server = aioftp.Server(users)
     load_dotenv("public.env")
     print("Aioftp server initializing...")
     try:
