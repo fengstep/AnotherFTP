@@ -1,11 +1,13 @@
 import aioftp
 import asyncio
 import os
+import traceback
 from dotenv import load_dotenv
 from ftp_client.uploader import Uploader
 from ftp_client.remover import Remover
 
 MENU = """Select an option:
+    - download
     - upload
     - remove
     - list
@@ -15,18 +17,16 @@ MENU = """Select an option:
 
 async def user_options(client):
     option = input(MENU)
-    option = option.strip()
-    if option.lower() == 'upload':
-        dir = None
-        file = None
+    option = option.strip().lower()
+    if option == 'upload':
         fpath = input('Input file or directory to upload:')
-        if fpath:
-            if os.path.isdir(fpath):
-                dir = fpath
-            else:
-                file = fpath
-        upload_handler = Uploader(client, path_to_file=file, path_to_dir=dir)
-        await upload_handler.perform_upload()
+        upload_handler = Uploader(client, fpath)
+        try:
+            await upload_handler.perform_upload()
+        except Exception as e:
+            print(f"Error with upload: {e}")   
+    elif option == "list":
+        await list_files(client)
     elif option.lower() == "remove":
         file = None
         await list_files(client)
@@ -40,17 +40,22 @@ async def user_options(client):
         if not path:
             path = "."
         list_local_directory(path)
+    elif option == "download":
+        await list_files(client)
+        fpath = input("Enter file to download: ")
+        download = Uploader(client, fpath)
+        await download.perform_download()
+
     return option
 
 async def list_files(client):
     # Lists for directory and file names in remote server
     load_dotenv("public.env")
-    remote_dir = os.getenv("remote_dir")
     directories = []
     files = []
 
     # Go through and add all entries (directories & files)
-    async for path, info in client.list(remote_dir):
+    async for path, info in client.list():
         # If the type is a directory
         if info.get('type') == 'dir':
             directories.append(path.name)
@@ -91,6 +96,7 @@ async def connect_and_login(username, password, host, port):
 
     except Exception as e:
         print(f"Connection/login failed: {e}")
+        traceback.print_exc()
 
 
 def list_local_directory(path="."):
