@@ -12,7 +12,7 @@ class TestUploader(unittest.IsolatedAsyncioTestCase):
         aioClient = aioftp.Client()
         await aioClient.connect(os.getenv("ip"), os.getenv("port"))
         await aioClient.login("user", "password")
-        print(f"Test client connected to {os.getenv("ip")}:{os.getenv("port")}")
+        print(f"Test client connected to {os.getenv('ip')}:{os.getenv('port')}")
         print("Ready.")
         return aioClient
     def find_paths(self, directory: str) -> list: # Return array of paths in a given directory
