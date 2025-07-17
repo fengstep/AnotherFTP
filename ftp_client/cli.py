@@ -1,9 +1,24 @@
 import argparse
 from .ftp_client import run_client
+from dotenv import load_dotenv
+import os
 
 class CommandLine:
     def __init__(self, args):
         self.args = args
+    def numberedAnswer(self, msg: str, choices: int) -> int:
+        answer = None
+        valid = False
+        while not valid:
+            try:
+                answer = int(input(msg))
+                if(answer >= 1 and answer <= choices):
+                    valid = True
+                else:
+                    print(f"Choose an answer between 1 and {choices}.")
+            except Exception:
+                print("Invalid input. Try again.")
+        return answer
 
     def run(self):
         # Create the main argument parser with a description
@@ -29,6 +44,22 @@ class CommandLine:
             print(f"Client running!")
             print(f"Attempting login as {parsed_args.username}...")
 
+            load_dotenv(".env")
+            someUsername, somePassword = os.getenv("ftp_username"), os.getenv("ftp_password")
+            answer = None
+            # No credentials saved
+            if (someUsername == None) or (somePassword == None):
+                answer = self.numberedAnswer("No login credentials saved. Save now?:" \
+                "\n[1] Yes\n[2] No\nAnswer: ", 2)
+            # Credentials already saved
+            else:
+                print("Using saved credentials to login.")
+                run_client(someUsername, somePassword)
+
+            if(answer == 1): # Overwrite new saved credentials
+                print("Saving credentials.")
+                with open(".env", "w") as env:
+                    env.write(f'username=\"{parsed_args.username}\"\npassword=\"{parsed_args.password}\"')
 
             # Call the run_client function, passing the provided credentials
             run_client(parsed_args.username, parsed_args.password)
