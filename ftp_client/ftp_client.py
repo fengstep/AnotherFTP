@@ -76,27 +76,6 @@ async def list_files(client):
     print()
 
 
-async def connect_and_login(username, password, host, port):
-    client = aioftp.Client()
-    try:
-        print(f"Connecting to FTP remote server at {host}:{port}")
-        await client.connect(host, port)
-
-        print(f"Logging in as {username}...")
-        await client.login(username, password)
-
-        print("Login Successful!")
-        
-        while True:
-            output = await user_options(client)
-            if output.lower() == 'quit':
-                await client.quit()
-                print("\nConnection closed.")
-                break
-
-    except Exception as e:
-        print(f"Connection/login failed: {e}")
-        traceback.print_exc()
 
 
 def list_local_directory(path="."):
@@ -138,8 +117,37 @@ def list_local_directory(path="."):
     except Exception as e:
         print(f"Error reading local directory: {e}")
 
-def run_client(username, password):
+def run_client(username, password, automatic_login):
     load_dotenv("public.env")
-    asyncio.run(connect_and_login(username, password,
-                                  os.getenv("ip"),
-                                  os.getenv("port")))
+    try:
+        asyncio.run(connect_and_login(username, password,
+                                    os.getenv("ip"),
+                                    os.getenv("port")))
+    except Exception as error:
+        if("530" in str(error)):
+            print("Credential login failed.")
+            if(automatic_login == True):
+                print("Saved credential login detected. They may be incorrect- deleting them now.")
+                os.remove(".env")
+            exit(1)
+        else:
+            print(f"Something went wrong with the session.\nError: {error}")
+            traceback.print_exc()
+
+
+async def connect_and_login(username, password, host, port):
+    client = aioftp.Client()
+    print(f"Connecting to FTP remote server at {host}:{port}")
+    await client.connect(host, port)
+
+    print(f"Logging in as {username}...")
+    await client.login(username, password)
+
+    print("Login Successful!")
+    
+    while True:
+        output = await user_options(client)
+        if output.lower() == 'quit':
+            await client.quit()
+            print("\nConnection closed.")
+            break
