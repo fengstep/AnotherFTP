@@ -1,7 +1,9 @@
 import argparse
+import os
+import aioftp
 from .ftp_client import run_client
 from dotenv import load_dotenv
-import os
+
 
 class CommandLine:
     def __init__(self, args):
@@ -24,44 +26,52 @@ class CommandLine:
         # Create the main argument parser with a description
         parser = argparse.ArgumentParser(
             description="Simple FTP ClientCLI\n\nConnect and browse an FTP server.",
-            epilog="Example usage:\n  python main.py login user1 pass123\n" 
-            "MAC Example:\n  python3 main.py login user1 pass123\n",
+            epilog="Example usage:\n  python main.py -u USERNAME -p PASSWORD\n"
+            "MAC Example:\n  python3 main.py -u USERNAME -p PASSWORD\n",
             formatter_class=argparse.RawTextHelpFormatter)  # allows multiline epilog
+        
+        parser.add_argument("-u", "--username", help="Username used to login to FTP", nargs=1)
+        parser.add_argument("-p", "--password", help="Password used to login to FTP", nargs=1)
+        args = parser.parse_args()
 
-        # Add a subparser group to handle different commands (e.g., login, upload, download)
-        subparsers = parser.add_subparsers(dest="command", required=True)
+        load_dotenv(".env")
+        savedUsername, savedPassword = os.getenv("ftp_username"), os.getenv("ftp_password")
 
-        # Create the 'login' subcommand and define its expected arguments
-        login_parser = subparsers.add_parser("login", help="Login to FTP server")
-        login_parser.add_argument("username", type=str, help="Username") # First arg (required)
-        login_parser.add_argument("password", type=str, help="Password") # Second arg (required)
+        login_username = None
+        login_password = None
+        automatic_login = False
 
-        # Parse the command-line arguments, skipping the script name (argv[0])
-        parsed_args = parser.parse_args(self.args[1:])  
-
-        # Handles 'Login' command
-        if parsed_args.command == "login":
-            print(f"Client running!")
-            print(f"Attempting login as {parsed_args.username}...")
-
-            load_dotenv(".env")
-            someUsername, somePassword = os.getenv("ftp_username"), os.getenv("ftp_password")
-            answer = None
-            # No credentials saved
-            if (someUsername == None) or (somePassword == None):
-                answer = self.numberedAnswer("No login credentials saved. Save now?:" \
-                "\n[1] Yes\n[2] No\nAnswer: ", 2)
-            # Credentials already saved
+        # If no username passed, check for saved credentials.
+        if(args.username == None and args.password == None):
+            if(savedUsername == None or savedUsername):
+                print("No saved credentials for login. Please supply a username and password.\nUse -h to see usage.")
+                exit(1)
             else:
-                print("Using saved credentials to login.")
-                run_client(someUsername, somePassword)
+                automatic_login = True
+                login_username = savedUsername
+                login_password = savedPassword
+        # Username or password passed, login as those instead
+        else:
+            if(args.username != None and args.password != None):
+                login_username = args.username[0]
+                login_password = args.password[0]
+            else:
+                print("Error: You must supply both username and password.")
+                exit(1)
+            print(f"Attempting login as {login_username}...")
 
-            if(answer == 1): # Overwrite new saved credentials
+        # No credentials saved, ask if they want to save
+        if (savedUsername == None) or (savedPassword == None) or (savedUsername != login_username):
+            answer = self.numberedAnswer("Login credentials are not saved. Save now with given arguments?:" \
+            "\n[1] Yes\n[2] No\nAnswer: ", 2)
+            # Overwrite new saved credentials
+            if(answer == 1): 
                 print("Saving credentials.")
                 with open(".env", "w") as env:
-                    env.write(f'username=\"{parsed_args.username}\"\npassword=\"{parsed_args.password}\"')
-
-            # Call the run_client function, passing the provided credentials
-            run_client(parsed_args.username, parsed_args.password)
+                    env.write(f'ftp_username=\"{login_username}\"\nftp_password=\"{login_password}\"')
+                    automatic_login = True
         else:
-            parser.print_help()
+            print("No credentials were saved for this session.")
+        print(f"Client running!")
+        # Call the run_client function, passing the provided credentials
+        run_client(login_username, login_password, automatic_login)
