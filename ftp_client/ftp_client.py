@@ -156,7 +156,7 @@ async def change_remote_permissions(client, path, mode):
          raise RuntimeError(f"Unexpected error during CHMOD: {e}")
 
 
-def run_client(username, password, automatic_login):
+def run_client(username, password, automatic_login = False):
 
     load_dotenv("public.env")
     try:
