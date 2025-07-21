@@ -43,7 +43,7 @@ class CommandLine:
 
         # If no username passed, check for saved credentials.
         if(args.username == None and args.password == None):
-            if(savedUsername == None or savedUsername):
+            if(savedUsername == None or savedPassword == None):
                 print("No saved credentials for login. Please supply a username and password.\nUse -h to see usage.")
                 exit(1)
             else:
