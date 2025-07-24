@@ -49,4 +49,10 @@ class TestLogin():
             myClient.run()
         assert e.value.code == 0 # Assert autologin and out correctly
 
+        # Cleanup .env after tests
+        try:
+            os.remove(".env")
+        except Exception:
+            pass
+
         
