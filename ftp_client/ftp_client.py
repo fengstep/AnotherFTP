@@ -190,4 +190,4 @@ async def connect_and_login(username, password, host, port):
         if output.lower() == 'quit':
             await client.quit()
             print("\nConnection closed.")
-            break
+            exit(0) 
