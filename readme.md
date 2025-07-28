@@ -11,9 +11,18 @@
 # Run tests with
 ```python -m unittest```
 
-# Command Line arguments to be considered
+# Command Line arguments 
 ```
 -h, --help  help me
-login <username> <password>  Login as username with password
+-u <username>, --username <username> Username to login
+-p <password>, --password <password> Password to login
+
+upload <path>, Upload a file to server
+download <path>, Download a file from server
+remove <path>, Remove file from server
+list, List files on server
+local, List files locally
+chmod, Change permissions on server files
+quit, Logout
 ```
 
