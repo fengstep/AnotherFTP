@@ -2,9 +2,26 @@ import aioftp
 import asyncio
 import os
 import traceback
+import builtins
 from dotenv import load_dotenv
+from datetime import datetime
 from ftp_client.uploader import Uploader
 from ftp_client.remover import Remover
+
+stdin = builtins.input
+
+def log_input(prompt = ""):
+    input_str = stdin(prompt)
+    with open("log.txt", "a") as log:
+        log.write(f"[{datetime.now()}] CMD: {input_str}\n")
+    return input_str
+
+def log_any(text):
+    with open("log.txt", "a") as log:
+        log.write(f"[{datetime.now()}] {text}\n")
+    return len(text)
+
+builtins.input = log_input
 
 MENU = """Select an option:
     - download
@@ -44,9 +61,6 @@ async def user_options(client):
 
     elif option == "rename-local":
         return local_rename()
-
-    elif option.lower() == "list":
-        await list_files(client)
 
     elif option.lower() == "local":
         path = input("Enter local directory path (or press Enter for current directory): ").strip()
@@ -275,9 +289,9 @@ def run_client(username, password, automatic_login = False):
                                     os.getenv("port")))
     except Exception as error:
         if("530" in str(error)):
-            print("Credential login failed.")
+            print("Login failed. Are your credentials correct?")
             if(automatic_login == True):
-                print("Saved credential login detected. They may be incorrect- deleting them now.")
+                print("Saved credential login detected. Login details may be incorrect- deleting them now.")
                 os.remove(".env")
             exit(1)
         else:
@@ -288,16 +302,19 @@ def run_client(username, password, automatic_login = False):
 async def connect_and_login(username, password, host, port):
     client = aioftp.Client()
     print(f"Connecting to FTP remote server at {host}:{port}")
+    log_any(f"Connecting to FTP remote server at {host}:{port}")
     await client.connect(host, port)
 
     print(f"Logging in as {username}...")
     await client.login(username, password)
 
     print("Login Successful!")
+    log_any(f"Logged in as user: {username}.")
     
     while True:
         output = await user_options(client)
         if output.lower() == 'quit':
             await client.quit()
             print("\nConnection closed.")
+            log_any(f"Session ended for user: {username}")
             exit(0) 
