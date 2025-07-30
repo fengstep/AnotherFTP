@@ -5,10 +5,12 @@ import traceback
 from dotenv import load_dotenv
 from ftp_client.uploader import Uploader
 from ftp_client.remover import Remover
+from ftp_client.creator import Creator
 
 MENU = """Select an option:
     - download
     - upload
+    - create directory
     - remove
     - rename-server
     - rename-local
@@ -38,6 +40,14 @@ async def user_options(client):
         fpath = input("Input File/Directory to remove: ")
         remover = Remover(client)
         await remover.remove_file(fpath)
+
+    elif option == "create directory":
+        dir_name = input("Enter directory name to create: ").strip()
+        creator = Creator(client)
+        try:
+            await creator.create_directory(dir_name)
+        except Exception as e:
+            print(f"Error creating directory: {e}")
     
     elif option == "rename-server":
         return await remote_rename(client)
