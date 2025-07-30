@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import aioftp
 from ..ftp_client import change_remote_permissions
 
-# run tests with: python -m unittest ftp_client.tests.test_permissions
+# Run tests with: python -m unittest ftp_client.tests.test_permissions
 
 class TestChangePermissions(unittest.IsolatedAsyncioTestCase):
 
