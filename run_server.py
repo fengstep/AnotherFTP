@@ -15,7 +15,7 @@ async def main():
             )
         ),
     )
-    server = aioftp.Server(users, idle_timeout=5)
+    server = aioftp.Server(users, idle_timeout=300)
     load_dotenv("public.env")
     print("Aioftp server initializing...")
     try:

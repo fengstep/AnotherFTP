@@ -8,7 +8,7 @@ from ftp_client.remover import Remover
 
 # Below is used for timeout system used within this file
 import time
-IDLE_TIMEOUT = 60
+IDLE_TIMEOUT = 300
 
 MENU = """Select an option:
     - download
