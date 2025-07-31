@@ -8,9 +8,6 @@ from datetime import datetime
 from ftp_client.uploader import Uploader
 from ftp_client.remover import Remover
 stdin = builtins.input
-# Below is used for timeout system used within this file
-import time
-IDLE_TIMEOUT = 300
 
 
 def log_input(prompt = ""):
