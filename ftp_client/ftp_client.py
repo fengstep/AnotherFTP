@@ -2,13 +2,29 @@ import aioftp
 import asyncio
 import os
 import traceback
+import builtins
 from dotenv import load_dotenv
+from datetime import datetime
 from ftp_client.uploader import Uploader
 from ftp_client.remover import Remover
-
+stdin = builtins.input
 # Below is used for timeout system used within this file
 import time
 IDLE_TIMEOUT = 300
+
+
+def log_input(prompt = ""):
+    input_str = stdin(prompt)
+    with open("log.txt", "a") as log:
+        log.write(f"[{datetime.now()}] CMD: {input_str}\n")
+    return input_str
+
+def log_any(text):
+    with open("log.txt", "a") as log:
+        log.write(f"[{datetime.now()}] {text}\n")
+    return len(text)
+
+builtins.input = log_input
 
 MENU = """Select an option:
     - download
@@ -48,9 +64,6 @@ async def user_options(client):
 
     elif option == "rename-local":
         return local_rename()
-
-    elif option.lower() == "list":
-        await list_files(client)
 
     elif option.lower() == "local":
         path = input("Enter local directory path (or press Enter for current directory): ").strip()
@@ -279,9 +292,9 @@ def run_client(username, password, automatic_login = False):
                                     os.getenv("port")))
     except Exception as error:
         if("530" in str(error)):
-            print("Credential login failed.")
+            print("Login failed. Are your credentials correct?")
             if(automatic_login == True):
-                print("Saved credential login detected. They may be incorrect- deleting them now.")
+                print("Saved credential login detected. Login details may be incorrect- deleting them now.")
                 os.remove(".env")
             exit(1)
         else:
@@ -290,9 +303,11 @@ def run_client(username, password, automatic_login = False):
 
 async def connect_and_login(username, password, host, port):
     client = aioftp.Client()
+
     # Attempt connection
     try:
         print(f"Connecting to FTP remote server at {host}:{port}")
+        log_any(f"Connecting to FTP remote server at {host}:{port}")
         await asyncio.wait_for(client.connect(host, port), timeout=10)
     except asyncio.TimeoutError:
         print("Timeout: Connection to the FTP server took too long.")
@@ -300,10 +315,11 @@ async def connect_and_login(username, password, host, port):
     except Exception as e:
         print(f"Failed to connect to FTP server: {e}")
         return
+    await client.connect(host, port)
 
     # Attempt login
     try:
-        print(f"Logging in as {username}...")
+        print(f"Logging in as user: {username}.")
         await asyncio.wait_for(client.login(username, password), timeout=10)
     except asyncio.TimeoutError:
         print("Timeout: Login process took too long.")
@@ -313,159 +329,32 @@ async def connect_and_login(username, password, host, port):
         return
 
     print("Login Successful!")
-
+    log_any(f"Logged in as user: {username}.")
     # Run the session
     try:
-        await run_client_session(client)
+        await run_client_session(client, username)
     except (ConnectionResetError, ConnectionAbortedError):
         print("Connection lost unexpectedly.")
     except Exception as e:
         print(f"Unexpected error during session: {e}")
 
-async def run_client_session(client):
-    while True:
-        try:
-            output = await user_options(client)
-            if output.lower() == 'quit':
-                await client.quit()
-                print("\nConnection closed.")
+async def run_client_session(client, username):
+    try:
+        while True:
+            try:
+                output = await user_options(client)
+                if output.lower() == 'quit':
+                    await client.quit()
+                    print("\nConnection closed.")
+                    log_any(f"Session ended for user: {username}")
+                    break
+        
+            except (ConnectionResetError, ConnectionAbortedError):
+                print("Connection lost")
                 break
-      
-        except (ConnectionResetError, ConnectionAbortedError):
-            print("Connection lost")
-            break
-        except Exception as e:
-            print(f"Error in session: {e}")
-            break
-
-'''
-# The method below is if we want the timeout to occur within this file
-# This was a rabbit hole I ended up diving into
-async def connect_and_login(username, password, host, port):
-   client = aioftp.Client()
-
-   try:
-       print(f"Connecting to FTP remote server at {host}:{port}")
-       await asyncio.wait_for(client.connect(host, port), timeout=10)
-   except asyncio.TimeoutError:
-       print("Timeout: Connection to the FTP server took too long.")
-       return
-   except Exception as e:
-       print(f"Failed to connect to FTP server: {e}")
-       return
-  
-   try:
-       print(f"Logging in as {username}...")
-       await asyncio.wait_for(client.login(username, password), timeout=10)
-   except asyncio.TimeoutError:
-       print("Timeout: Login process took too long.")
-
-
-   except Exception as e:
-       print(f"Unexpected login error: {e}")
-       return
-      
-   print("Login Successful!")
-
-
-   try:
-        await run_client_session(client)
-   except (ConnectionResetError) as e:
-        print("Idle timeout: The FTP connection was closed due to inactivity.")
-   except Exception as e:
-        print(f"Unexpected error during session: {e}")
-
-
-
-async def async_input(prompt):
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, input, prompt)
-
-async def idle_watchdog(client, get_last_action_time, stop_event):
-    while not stop_event.is_set():
-        await asyncio.sleep(1)
-        if time.time() - get_last_action_time() > IDLE_TIMEOUT:
-            print("Idle timeout reached. SAWWY... Closing session.")
-            await client.quit()
-            stop_event.set()  # signal to shut down
-            break
-
-async def run_client_session(client):
-    last_action_time = time.time()
-    stop_event = asyncio.Event()
-
-    def get_last_action_time():
-        return last_action_time
-
-    # Start the watchdog
-    asyncio.create_task(idle_watchdog(client, get_last_action_time, stop_event))
-
-    while not stop_event.is_set():
-        print(MENU)
-        try:
-            option = await async_input("> ")
-        except asyncio.CancelledError:
-            break  # If something cancels this, exit cleanly
-
-        # Prevent leftover input from being processed after timeout
-        if stop_event.is_set():
-            break
-
-        option = option.strip().lower()
-        last_action_time = time.time()
-
-        if option == 'quit':
-            await client.quit()
-            print("\nConnection closed.")
-            break
-
-        await handle_option(client, option)
-
-
-async def handle_option(client, option):
-    if option == 'upload':
-        fpath = input('Input file or directory to upload: ')
-        upload_handler = Uploader(client, fpath)
-        try:
-            await upload_handler.perform_upload()
-        except Exception as e:
-            print(f"Error with upload: {e}")   
-
-    elif option == "list":
-        await list_files(client)
-
-    elif option == "remove":
-        await list_files(client)
-        fpath = input("Input File/Directory to remove: ")
-        remover = Remover(client)
-        await remover.remove_file(fpath)
-
-    elif option == "rename-server":
-        await remote_rename(client)
-
-    elif option == "rename-local":
-        local_rename()
-
-    elif option == "local":
-        path = input("Enter local directory path (or press Enter for current directory): ").strip()
-        if not path:
-            path = "."
-        list_local_directory(path)
-
-    elif option == "download":
-        await list_files(client)
-        fpath = input("Enter file to download: ")
-        download = Uploader(client, fpath)
-        await download.perform_download()
-
-    elif option == "chmod":
-        path = input("Enter the remote path to file or directory: ").strip()
-        mode = input("Enter the new permission mode (e.g., 755 or 644): ").strip()
-        try:
-            await change_remote_permissions(client, path, mode)
-        except Exception as e:
-            print(f"Failed to change permissions: {e}")
-
-    else:
-        print("Invalid option.")
-'''
+            except Exception as e:
+                print(f"Error in session: {e}")
+                break
+    finally:
+        log_any(f"Session ended for user: {username}")
+         
