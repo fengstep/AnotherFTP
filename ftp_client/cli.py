@@ -70,8 +70,10 @@ class CommandLine:
                 with open(".env", "w") as env:
                     env.write(f'ftp_username=\"{login_username}\"\nftp_password=\"{login_password}\"')
                     automatic_login = True
+            else:
+                print("No credentials were saved for this session.")
         else:
-            print("No credentials were saved for this session.")
+            print("Using saved credentials for login.")
         print(f"Client running!")
         # Call the run_client function, passing the provided credentials
         run_client(login_username, login_password, automatic_login)
