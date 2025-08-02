@@ -4,23 +4,52 @@ import asyncio
 from dotenv import load_dotenv
 import aioftp
 from ..ftp_client import connect_and_login, run_client_session
+import threading
 
 # Change Idle_timeout on run_server.py to 5
 # Run tests with: python -m unittest ftp_client.tests.test_timeout
 
 class TestTimeout(unittest.IsolatedAsyncioTestCase):
 
+    async def mockServer(self):
+        users = (
+        aioftp.User(
+                "user",
+                "password",
+                home_path="/remote",
+                permissions = (
+                aioftp.Permission("/", readable=False, writable=False),
+                aioftp.Permission("/remote", readable=True, writable=True),
+                )
+            ),
+        )
+        self.server = aioftp.Server(users, idle_timeout=4)
+        load_dotenv("test.env", override=True)
+        print("Aioftp server initializing...")
+        try:
+            selectedPort = os.getenv('port')
+            ip = os.getenv('ip')
+            print(f"Server started at {ip}:{selectedPort}")
+            await self.server.run(host=ip, port=selectedPort)
+
+        except Exception as e:
+            print(f"ERROR: Server failed to start.\n{e}")
+
     async def asyncSetUp(self):
-        load_dotenv("public.env")
+        load_dotenv("test.env", override=True) # Use dev environment
         self.host = os.getenv("ip")
         self.port = int(os.getenv("port"))
         self.client = aioftp.Client()
+        # Start a mock server that has timeout = 4
+        asyncio.create_task(self.mockServer())
         await self.client.connect(self.host, self.port)
         await self.client.login("user", "password")
 
     async def asyncTearDown(self):
         try:
             await self.client.quit()
+            await self.server.close()
+            load_dotenv("public.env", override=True) # Refresh environment
         except Exception:
             pass
 
@@ -45,9 +74,7 @@ class TestTimeout(unittest.IsolatedAsyncioTestCase):
 
         await client.quit()
 
-    # TODO: This only passes if run_server.py idle_timeout is < 6 seconds. 
     async def test_idle_timeout(self):
-        self.skipTest("Only passes if run_server.py idle timeout is modified")
         print("Waiting 6 seconds to simulate idle timeout...")
         await asyncio.sleep(6) 
 
