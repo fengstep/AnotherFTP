@@ -320,10 +320,10 @@ async def connect_and_login(username, password, host, port):
         await asyncio.wait_for(client.login(username, password), timeout=10)
     except asyncio.TimeoutError:
         print("Timeout: Login process took too long.")
-        return
+        exit(1)
     except Exception as e:
         print(f"Unexpected login error: {e}")
-        return
+        exit(1)
 
     print("Login Successful!")
     log_any(f"Logged in as user: {username}.")
@@ -332,8 +332,10 @@ async def connect_and_login(username, password, host, port):
         await run_client_session(client, username)
     except (ConnectionResetError, ConnectionAbortedError):
         print("Connection lost unexpectedly.")
+        exit(1)
     except Exception as e:
         print(f"Unexpected error during session: {e}")
+        exit(1)
 
 async def run_client_session(client, username):
     try:
@@ -344,14 +346,14 @@ async def run_client_session(client, username):
                     await client.quit()
                     print("\nConnection closed.")
                     log_any(f"Session ended for user: {username}")
-                    break
-        
+                    exit(0)
             except (ConnectionResetError, ConnectionAbortedError):
                 print("Connection lost")
-                break
+                exit(1)
             except Exception as e:
                 print(f"Error in session: {e}")
-                break
+                exit(1)
     finally:
         log_any(f"Session ended for user: {username}")
+        exit(0)
          
