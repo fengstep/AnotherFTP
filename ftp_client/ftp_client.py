@@ -347,8 +347,8 @@ async def run_client_session(client, username):
                     print("\nConnection closed.")
                     log_any(f"Session ended for user: {username}")
                     exit(0)
-            except (ConnectionResetError, ConnectionAbortedError):
-                print("Connection lost")
+            except (ConnectionResetError, ConnectionAbortedError) as e:
+                print(f"Timed out: Connection lost.\n")
                 exit(1)
             except Exception as e:
                 print(f"Error in session: {e}")
