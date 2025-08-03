@@ -29,3 +29,18 @@ class TestCreator(unittest.IsolatedAsyncioTestCase):
             await test_creator.create_directory(name_to_create)
         test_remover = Remover(test_client)
         await test_remover.remove_file(name_to_create)
+
+    async def test_creating_directory_is_successful(self):
+        """
+        Create a directory, then check if it exists.
+        Should not raise any exceptions.
+        """
+        test_client = await self.connect()
+        name_to_create = "test_directory"
+        test_creator = Creator(test_client)
+        await test_creator.create_directory(name_to_create)
+        assert await test_client.exists(name_to_create), "Directory should have been created"
+        
+        # Cleanup
+        test_remover = Remover(test_client)
+        await test_remover.remove_file(name_to_create)
