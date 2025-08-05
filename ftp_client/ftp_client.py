@@ -35,6 +35,7 @@ MENU = """Select an option:
     - list
     - local
     - search
+    - search-local
     - chmod
     - quit
 """
@@ -102,6 +103,16 @@ async def user_options(client):
             result = await try_search.search(file_name)
             if(result == False):
                 print(f"'{file_name}' not found on server directory.")
+        except Exception as e:
+            print(e)
+
+    elif option == "search-local":
+        file_name = input("Enter file name to look for: ")
+        try_search = Searcher(client)
+        try:
+            result = try_search.local_search(file_name)
+            if(result == False):
+                print(f"'{file_name}' not found on local directory.")
         except Exception as e:
             print(e)
 

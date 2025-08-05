@@ -1,4 +1,5 @@
 import aioftp
+import os
 from .ftp_client_exceptions import ClientNoPathProvidedError
 
 class Searcher():
@@ -16,4 +17,15 @@ class Searcher():
                 print(f"Found {term} at {(str(path[0]))}")
                 result = True
         return result
-
+    
+    def local_search(self, term: str) -> bool:
+        term = term.strip()
+        if(len(term) <= 0):
+            raise ClientNoPathProvidedError
+        working_directory = os.getenv("local_dir")
+        result = False
+        for any_path in os.listdir(working_directory):
+            if term in any_path:
+                print(f"Found {term} at {os.path.abspath(any_path)}")
+                result = True
+        return result

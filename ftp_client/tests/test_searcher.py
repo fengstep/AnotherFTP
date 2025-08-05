@@ -29,3 +29,18 @@ class TestSearcher(unittest.IsolatedAsyncioTestCase):
         try_search = Searcher(client)
         result = await try_search.search("this_is_remote.txt")
         assert result == True
+    async def test_local_search_error(self):
+        client = await self.connect()
+        try_search = Searcher(client)
+        with pytest.raises(ClientNoPathProvidedError):
+            result = try_search.local_search("")
+    async def test_local_search_found(self):
+        client = await self.connect()
+        try_search = Searcher(client)
+        result = try_search.local_search("this_is_local.txt")
+        assert result == True
+    async def test_local_search_not_found(self):
+        client = await self.connect()
+        try_search = Searcher(client)
+        result = try_search.local_search("asdfjaslkfjaslkdfjalsf.txt")
+        assert result == False
