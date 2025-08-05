@@ -4,7 +4,7 @@ class ClientFileNotFoundError(Exception):
 
 class ClientNoPathProvidedError(Exception):
     def __init__(self):
-        super().__init__("Nothing to upload - no fpath provided.")
+        super().__init__("Error with Command: No file path provided.")
 
 class DirectoryAlreadyExistsError(Exception):
     def __init__(self, path):

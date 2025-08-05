@@ -8,6 +8,7 @@ from datetime import datetime
 from ftp_client.uploader import Uploader
 from ftp_client.remover import Remover
 from ftp_client.creator import Creator
+from ftp_client.searcher import Searcher
 stdin = builtins.input
 
 
@@ -33,6 +34,7 @@ MENU = """Select an option:
     - rename-local
     - list
     - local
+    - search
     - chmod
     - quit
 """
@@ -72,7 +74,7 @@ async def user_options(client):
     elif option == "rename-local":
         return local_rename()
 
-    elif option.lower() == "local":
+    elif option == "local":
         path = input("Enter local directory path (or press Enter for current directory): ").strip()
         if not path:
             path = "."
@@ -84,7 +86,7 @@ async def user_options(client):
         download = Uploader(client, fpath)
         await download.perform_download()
     
-    elif option.lower() == "chmod":
+    elif option == "chmod":
         path = input("Enter the remote path to file or directory: ").strip()
         mode = input("Enter the new permission mode (e.g., 755 or 644): ").strip()
 
@@ -92,6 +94,16 @@ async def user_options(client):
             await change_remote_permissions(client, path, mode)
         except Exception as e:
             print(f"Failed to change permissions: {e}")
+    
+    elif option == "search":
+        file_name = input("Enter file name to look for: ")
+        try_search = Searcher(client)
+        try:
+            result = await try_search.search(file_name)
+            if(result == False):
+                print(f"'{file_name}' not found on server directory.")
+        except Exception as e:
+            print(e)
 
     return option
 
