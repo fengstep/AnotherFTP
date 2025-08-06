@@ -2,6 +2,7 @@ import argparse
 import os
 import aioftp
 from .ftp_client import run_client
+from .ftp_client import log_any
 from dotenv import load_dotenv
 
 
@@ -67,11 +68,16 @@ class CommandLine:
             # Overwrite new saved credentials
             if(answer == 1): 
                 print("Saving credentials.")
+                log_any(f"Saving credentials for {login_username}")
                 with open(".env", "w") as env:
                     env.write(f'ftp_username=\"{login_username}\"\nftp_password=\"{login_password}\"')
                     automatic_login = True
+            else:
+                print("No credentials were saved for this session.")
+                log_any(f"No credentials saved for {login_username}")
         else:
-            print("No credentials were saved for this session.")
+            print("Using saved credentials for login.")
+            log_any(f"Utilized saved credentials for login {login_username}")
         print(f"Client running!")
         # Call the run_client function, passing the provided credentials
         run_client(login_username, login_password, automatic_login)
