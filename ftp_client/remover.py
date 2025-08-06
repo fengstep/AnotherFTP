@@ -1,5 +1,5 @@
 import aiofiles.os
-from .ftp_client_exceptions import DirectoryDoesNotExistError
+from .ftp_client_exceptions import DirectoryDoesNotExistError, ClientNoPathProvidedError
 import os
 class Remover():
     """
@@ -15,7 +15,9 @@ class Remover():
         file_to_remove: str
             File on the FTP server to remove
         """
-        if await aiofiles.os.path.exists(os.getenv("remote_dir")+"/"+file_to_remove):
+        if(len(file_to_remove.strip()) == 0):
+            raise ClientNoPathProvidedError
+        elif await aiofiles.os.path.exists(os.getenv("remote_dir")+"/"+file_to_remove):
             await self.client.remove(file_to_remove)
         else:
             raise DirectoryDoesNotExistError("Can't remove file/dir, path does not exist: {}".format(file_to_remove))

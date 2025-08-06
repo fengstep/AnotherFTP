@@ -59,7 +59,10 @@ async def user_options(client):
         await list_files(client)
         fpath = input("Input File/Directory to remove: ")
         remover = Remover(client)
-        await remover.remove_file(fpath)
+        try:
+            await remover.remove_file(fpath)
+        except Exception as e:
+            print(f"{e}")
 
     elif option == "create directory":
         dir_name = input("Enter directory name to create: ").strip()
@@ -199,7 +202,7 @@ async def remote_rename(client):
     # Check if any files exist on server, return if there are none
     if not files:
         print("\nNo files on server. Nothing available to rename.\n")
-        return "rename-server"
+        return 1
 
     print()
     print("Files on server:")
@@ -213,17 +216,17 @@ async def remote_rename(client):
     # Check if user input is empty, return if either are empty
     if not old_name or not new_name:
         print("\nRename requires both the old and new filenames. Process has been stopped.\n")
-        return "rename-server"
+        return 1
 
     # Check if new and old names are the same, return if they are
     if old_name == new_name:
         print("\nNew and old filenames are the same. Rename process has been stopped.\n")
-        return "rename-server"
+        return 1
 
     # Check if the user provided filename actually exists on the server
     if old_name not in files:
         print(f"\n'{old_name}' not found on the server. Rename process has been stopped.\n")
-        return "rename-server"
+        return 1
 
     print()
     try:
@@ -231,13 +234,12 @@ async def remote_rename(client):
         print(f"Success! '{old_name}' has been renamed to '{new_name}' on the server.")
     except Exception as e:
         print(f"Rename on server failed: {e}")
-        return "rename-server"
+        return 1
 
     # List files on server after renaming
     await list_files(client)
 
-    return "rename-server"
-
+    return 0
 
 def local_rename():
     # For renaming files on local machine
@@ -253,7 +255,7 @@ def local_rename():
     # Check if dir exists, return if it doesn't
     if not os.path.isdir(absolute_path):
         print(f"\n'{absolute_path}' directory does not exist. Local rename has been stopped.\n")
-        return "rename-local"
+        return 1
     
     list_local_directory(absolute_path)
 
@@ -263,12 +265,12 @@ def local_rename():
     # Check if user input is empty, return if either are empty
     if not old_name or not new_name:
         print("\nRename requires both the old and new filenames. Process has been stopped.\n")
-        return "rename-local"
+        return 1
 
     # Check if new and old names are the same, return if they are
     if old_name == new_name:
         print("\nNew and old filenames are the same. Rename process has been stopped.\n")
-        return "rename-local"
+        return 1
 
     full_old_name = os.path.join(absolute_path, old_name)
     full_new_name = os.path.join(absolute_path, new_name)
@@ -276,7 +278,7 @@ def local_rename():
     # Check if file actually exists, return if it doesn't
     if not os.path.exists(full_old_name):
         print(f"\n'{old_name}' does not exist in '{absolute_path}'. Rename process has been stopped.\n")
-        return "rename-local"
+        return 1
 
     try:
         os.rename(full_old_name, full_new_name)
@@ -284,8 +286,9 @@ def local_rename():
         list_local_directory(absolute_path)
     except Exception as e:
         print(f"Local rename failed: {e}")
+        return 1
     print()
-    return "rename-local"
+    return 0
 
 
 async def change_remote_permissions(client, path, mode):
