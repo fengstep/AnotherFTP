@@ -59,7 +59,10 @@ async def user_options(client):
         await list_files(client)
         fpath = input("Input File/Directory to remove: ")
         remover = Remover(client)
-        await remover.remove_file(fpath)
+        try:
+            await remover.remove_file(fpath)
+        except Exception as e:
+            print(f"{e}")
 
     elif option == "create directory":
         dir_name = input("Enter directory name to create: ").strip()
